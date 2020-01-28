@@ -1,14 +1,22 @@
-const http = require('http');
+const express = require('express');
+const mongoClient = require('mongodb').MongoClient;
+const bodyParser = require('body-parser');
+const db = require('./config/db');
 
-const port = process.env.PORT || 3000;
-const hostname = '127.0.0.1';
-// const app = require('./app');
+const app = express();
 
-const server = http.createServer();
+const port = process.env.port || 3000;
 
-server.listen(port, hostname, () => {
-  setInterval(() => {
-    console.log(`Server running at http://${port}/`);
+app.use(bodyParser.urlencoded({ extended: true }))
 
-  }, 1000);
-});
+
+mongoClient.connect(db.url, {native_parser:true}, (err, client) => {
+  if(err){
+    console.log(err);
+  } 
+  const database = client.db(db.dbName);
+  require('./app/routes')(app, database);
+  app.listen(port, () => {
+    console.log('works')
+  })
+})
